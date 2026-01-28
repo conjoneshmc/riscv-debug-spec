@@ -11,17 +11,19 @@ them invaluable when debugging code from ROM. They can trigger on
 execution of instructions at a given memory address, or on the
 address/data in loads/stores.
 
-If Sdtrig is implemented, the Trigger Module must support at least one
-trigger. Accessing trigger CSRs that are not used by any of the
-implemented triggers must result in an illegal instruction exception.
-M-Mode and Debug Mode accesses to trigger CSRs that are used by any of
+[#norm:sdtrig_min_triggers]#If Sdtrig is implemented, the Trigger Module must support at least one
+trigger.# [#norm:sdtrig_unused_csr_access]#Accessing trigger CSRs that are not used by any of the
+implemented triggers must result in an illegal instruction exception.#
+[#norm:sdtrig_dm_mode_csr_access]#M-Mode and Debug Mode accesses to trigger CSRs that are used by any of
 the implemented triggers must succeed, regardless of the current type of
-the currently selected trigger.
+the currently selected trigger.#
 
+[[norm:sdtrig_trigger_fire]]
 A trigger matches when the conditions that it specifies (e.g. a load
 from a specific address) are met. A trigger fires when a trigger that
 matches performs the action configured for that trigger.
 
+[[norm:sdtrig_dmode_trigger_nofire]]
 Triggers do not fire while in Debug Mode.
 
 === Enumeration
