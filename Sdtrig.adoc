@@ -57,18 +57,18 @@ Triggers can be configured to take one of several actions when they fire. <<tab:
 [align="center",float="center",cols=">1,<10",options="header"]
 |===
 ^| Value | Description
-|0 | Raise a breakpoint exception. (Used when software wants to use the trigger module without an external debugger attached.) `xepc` must contain the virtual address of the next instruction that must be executed to preserve the program flow.
-|1 | Enter Debug Mode. {csr-dpc} must contain the virtual address of the next instruction that must be executed to preserve the program flow. +
-This action is only legal when the trigger's {mcontrol-dmode} is 1.  Since
+|0 | [#norm:sdtrig_action_breakpoint]#Raise a breakpoint exception.# (Used when software wants to use the trigger module without an external debugger attached.) [#norm:sdtrig_action_breakpoint_xepc]#`xepc` must contain the virtual address of the next instruction that must be executed to preserve the program flow.#
+|1 | [#norm:sdtrig_action_dmode]#Enter Debug Mode.# [#norm:sdtrig_action_dmode_dpc]#{csr-dpc} must contain the virtual address of the next instruction that must be executed to preserve the program flow.# +
+[#norm:sdtrig_action_dmode_check]#This action is only legal when the trigger's {mcontrol-dmode} is 1.  Since
 {csr-tdata1} is WARL, hardware must prevent it from containing {tdata1-dmode}=0
-and action=1. +
-This action can only be supported if `Sdext` is implemented on the hart.
-| 2 | Trace on, described in the trace specification. 
-| 3 | Trace off, described in the trace specification.
-| 4 | Trace notify, described in the trace specification.
-| 5 | Reserved for use by the trace specification.
-| 8 - 9 | Send a signal to TM external trigger output 0 or 1 (respectively).
-| other | Reserved for future use.
+and action=1.# +
+[#norm:sdtrig_action_dmode_needs_sdext]#This action can only be supported if `Sdext` is implemented on the hart.#
+| 2 | [#norm:sdtrig_action_trace_on]#Trace on, described in the trace specification.# 
+| 3 | [#norm:sdtrig_action_trace_off]#Trace off, described in the trace specification.#
+| 4 | [#norm:sdtrig_action_trace_notify]#Trace notify, described in the trace specification.#
+| 5 | [#norm:sdtrig_action_trace_reserved]#Reserved for use by the trace specification.#
+| 8 - 9 | [#norm:sdtrig_action_external]#Send a signal to TM external trigger output 0 or 1 (respectively).#
+| other | [#norm:sdtrig_action_reserved]#Reserved for future use.#
 |===
 
 [NOTE]
@@ -80,16 +80,17 @@ logic.
 
 === Priority
 
+[[norm:sdtrig_trigger_priority]]
 <<tab:priority>> lists the synchronous exceptions from the Privileged Spec, and where the various types of triggers fit in. The first 3 columns come from the Privileged Spec, and the final
 column shows where triggers fit in. Priorities in the table are
 separated by horizontal lines, so e.g. etrigger and itrigger have the
 same priority. If this table contradicts the table in the Privileged
 Spec, then the latter takes precedence.
 
-This table only applies if triggers are precise. Otherwise triggers will
+[#norm:sdtrig_trigger_precision]#This table only applies if triggers are precise. Otherwise triggers will
 fire some indeterminate time after the event, and the priority is
-irrelevant. When triggers are chained, the priority is the lowest
-priority of the triggers in the chain.
+irrelevant.# [#norm:sdtrig_trigger_chained_priority]#When triggers are chained, the priority is the lowest
+priority of the triggers in the chain.#
 
 [[tab:priority]]
 .Synchronous exception priority in decreasing priority order.
@@ -132,9 +133,9 @@ fault |
 | _Lowest_ | 3 || mcontrol/mcontrol6 load data before
 |===
 
-When multiple triggers in the same priority fire at once, {mcontrol-hit} (if
-implemented) is set for all of them. If more than one of these triggers
-has {mcontrol-action}=0 then `tval` is updated in accordance with one of them, but which one is UNSPECIFIED . If one of these triggers has the "enter Debug Mode" action (1)
+[#norm:sdtrig_trigger_same_priority_hit]#When multiple triggers in the same priority fire at once, {mcontrol-hit} (if
+implemented) is set for all of them.# [#norm:sdtrig_trigger_same_priority_tval]#If more than one of these triggers
+has {mcontrol-action}=0 then `tval` is updated in accordance with one of them, but which one is UNSPECIFIED.# [#norm:sdtrig_trigger_same_priority_dmode]#If one of these triggers has the "enter Debug Mode" action (1)
 and another trigger has the "raise a breakpoint exception" action (0),
 the preferred behavior is to have both actions take place. It is
 implementation-dependent which of the two happens first. This ensures
@@ -143,7 +144,7 @@ and that a trigger set by user code doesn't affect the external
 debugger. If this is not implemented, then the hart must enter Debug
 Mode and ignore the breakpoint exception. In the latter case, {mcontrol-hit} of the
 trigger whose action is 0 must still be set, giving a debugger an
-opportunity to handle this case.
+opportunity to handle this case.#
 Since triggers that have an action other than 0 or 1 don't affect the execution
 of the hart, they are not mentioned in the priority table. Such triggers fire
 independently from those that have an action of 0 or 1.
@@ -185,6 +186,7 @@ privileged mode than Y.
 any time.
 ====
 
+[[norm:sdtrig_mcontrol_no_reentry]]
 Harts that support triggers with {mcontrol-action}=0 should implement one of the following two solutions to solve the problem of reentrancy:
 
 . The hardware prevents triggers with {mcontrol-action}=0 from matching or firing while in M-mode and while `MIE` in `mstatus` is 0. If `medeleg` [3]=1 then it prevents triggers with {mcontrol-action}=0 from
@@ -226,19 +228,20 @@ both of them how certain corner cases are treated.
 If the A extension is supported, then triggers on loads/stores treat
 them as follows:
 
-. `lr` instructions are loads.
-. Successful `sc` instructions are stores.
+. [#norm:sdtrig_mcontrol_atomic_lr]#`lr` instructions are loads.#
+. [#norm:sdtrig_mcontrol_atomic_sc]#Successful `sc` instructions are stores.#
 . It is UNSPECIFIED whether failing `sc` instructions are stores or not.
-. Each AMO instruction is a load for the read portion of the operation.
+. [#norm:sdtrig_mcontrol_atomic_load]#Each AMO instruction is a load for the read portion of the operation.
 The address is always available to trigger on, although the value loaded
-might not be, depending on the hardware implementation.
-. Each AMO instruction is a store for the write portion of the operation.
-The address is always available to trigger on. Whether data store triggers match on AMOs is UNSPECIFIED.
+might not be, depending on the hardware implementation.#
+. [#norm:sdtrig_mcontrol_atomic_store]#Each AMO instruction is a store for the write portion of the operation.
+The address is always available to trigger on. Whether data store triggers match on AMOs is UNSPECIFIED.#
 . If the destination register of any load or AMO is `zero` then it is UNSPECIFIED whether a
 data load trigger will match.
 
 ==== Combined Accesses
 
+[[norm:sdtrig_mcontrol_combined_access]]
 Some instructions lead a hart to perform multiple memory accesses. This
 includes vector loads and stores, as well as `cm.push` and `cm.pop`
 instructions. The Trigger Module should match such accesses as if they
@@ -249,6 +252,7 @@ XLEN.
 
 ==== Cache Operations
 
+[[norm:sdtrig_mcontrol_cache_access]]
 Cache operations are infrequently performed, and code that uses them can
 have hard-to-find bugs. For the purposes of debug triggers, two classes
 of cache operations must match as stores:
@@ -257,6 +261,7 @@ of cache operations must match as stores:
 otherwise non-coherent implicit and explicit memory accesses.
 . Cache operations that perform block writes of constant data.
 
+[[norm:sdtrig_mcontrol_cache_address_match]]
 Only triggers with {mcontrol6-size}=0 and {mcontrol6-select}=0 will match. Since cache operations affect
 multiple addresses, there are multiple possible values to compare
 against. Implementations must implement one of the following options.
@@ -269,6 +274,7 @@ the nearest cache block boundary (exclusive) is a compare value.
 is a compare value.
 . The effective address of the instruction is a compare value.
 
+[[norm:sdtrig_mcontrol_cache_hint]]
 Cache operations encoded as HINTs do not match debug triggers.
 
 [NOTE]
@@ -288,6 +294,7 @@ constant data.
 
 ==== Address Matches
 
+[[norm:sdtrig_tdata2_address]]
 For address matches without a mask, {csr-tdata2} must be able to hold all valid
 addresses in all supported translation modes. That means that after writing any
 of these valid addresses, the exact same value XLEN-wide value is read back,
@@ -305,6 +312,7 @@ software and used by hardware.
 
 ===== Invalid Addresses
 
+[[norm:sdtrig_tdata2_address_invalid]]
 If {csr-tdata2} can hold any invalid addresses, then writes of an
 invalid address that can not be represented as-is should be converted to
 a different invalid address that can be represented.
@@ -326,9 +334,9 @@ state changes up to that point might have been performed, while
 subsequent state changes, starting from the event that activated the
 trigger, might not have been. The definition of such an instruction will
 specify the order in which architectural state changes take place.
-Alternatively, it may state that partial execution is not allowed,
+[#norm:sdtrig_trigger_no_partial_exec]#Alternatively, it may state that partial execution is not allowed,
 implying that a mid-execution trigger must prevent any architectural
-state changes from occurring.
+state changes from occurring.#
 
 Debuggers won't be aware if an instruction has been partially executed.
 When they resume execution, they will execute the same instruction once
@@ -348,15 +356,15 @@ follow write-any-read-legal semantics. If a debugger writes an
 unsupported configuration, the register will read back a value that is
 supported (which may simply be a disabled trigger). This means that a
 debugger must always read back values it writes to `tdata` registers,
-unless it already knows what is supported. Writes to one `tdata`
+unless it already knows what is supported. [#norm:sdtrig_tdata_writes]#Writes to one `tdata`
 register must not modify the contents of other `tdata` registers, nor
 the configuration of any trigger besides the one that is currently
-selected.
+selected.#
 
 The combination of these rules means that a debugger cannot simply set a
 trigger by writing {csr-tdata1}, then {csr-tdata2}, etc. The current value of {csr-tdata2} might not be legal
-with the new value of {csr-tdata1}. To help with this situation, it is guaranteed
-that writing 0 to {csr-tdata1} disables the trigger, and leaves it in a state where {csr-tdata2} and {csr-tdata3} can be written with any value that makes sense for any trigger type supported by this trigger.
+with the new value of {csr-tdata1}. To help with this situation, [#norm:sdtrig_tdata1_trigger_disable]#it is guaranteed
+that writing 0 to {csr-tdata1} disables the trigger, and leaves it in a state where {csr-tdata2} and {csr-tdata3} can be written with any value that makes sense for any trigger type supported by this trigger.#
 
 As a result, a debugger can write any supported trigger as follows:
 
@@ -369,6 +377,7 @@ fire in the current privilege mode must use this same sequence to
 restore the triggers. This avoids the problem of a partially written
 trigger firing at a different time than is expected.
 
+[[norm:sdtrig_trigger_unimplemented]]
 Attempts to access an unimplemented Trigger Module Register raise an illegal
 instruction exception.
 
