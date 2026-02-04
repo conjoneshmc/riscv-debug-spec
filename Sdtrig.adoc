@@ -377,7 +377,6 @@ fire in the current privilege mode must use this same sequence to
 restore the triggers. This avoids the problem of a partially written
 trigger firing at a different time than is expected.
 
-[[norm:sdtrig_trigger_unimplemented]]
 Attempts to access an unimplemented Trigger Module Register raise an illegal
 instruction exception.
 
