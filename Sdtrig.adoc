@@ -57,8 +57,8 @@ Triggers can be configured to take one of several actions when they fire. <<tab:
 [align="center",float="center",cols=">1,<10",options="header"]
 |===
 ^| Value | Description
-|0 | [#norm:sdtrig_action_breakpoint]#Raise a breakpoint exception.# (Used when software wants to use the trigger module without an external debugger attached.) [#norm:sdtrig_action_breakpoint_xepc]#`xepc` must contain the virtual address of the next instruction that must be executed to preserve the program flow.#
-|1 | [#norm:sdtrig_action_dmode]#Enter Debug Mode.# [#norm:sdtrig_action_dmode_dpc]#{csr-dpc} must contain the virtual address of the next instruction that must be executed to preserve the program flow.# +
+|0 | [#norm:sdtrig_action_breakpoint]#Raise a breakpoint exception. (Used when software wants to use the trigger module without an external debugger attached.) `xepc` must contain the virtual address of the next instruction that must be executed to preserve the program flow.#
+|1 | [#norm:sdtrig_action_dmode]#Enter Debug Mode. {csr-dpc} must contain the virtual address of the next instruction that must be executed to preserve the program flow.# +
 [#norm:sdtrig_action_dmode_check]#This action is only legal when the trigger's {mcontrol-dmode} is 1.  Since
 {csr-tdata1} is WARL, hardware must prevent it from containing {tdata1-dmode}=0
 and action=1.# +
